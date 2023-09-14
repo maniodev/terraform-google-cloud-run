@@ -114,9 +114,17 @@ variable "task_count" {
 variable "volumes" {
   type = list(object({
     name = string
-    cloud_sql_instance = object({
-      instances = set(string)
-    })
+    cloud_sql_instance = optional(object({
+      instances = optional(set(string), [])
+    }), {})
+    secret = optional(object({
+      secret = string
+      items  = optional(list(object({
+        path  = string
+        version = optional(string, "latest")
+        mode = optional(number, 0)
+      })), null)
+    }), null)
   }))
   description = "A list of Volumes to make available to containers."
   default     = []

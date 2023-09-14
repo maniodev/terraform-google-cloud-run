@@ -77,9 +77,38 @@ resource "google_cloud_run_v2_job" "job" {
         for_each = var.volumes
         content {
           name = volumes.value["name"]
-          cloud_sql_instance {
-            instances = volumes.value.cloud_sql_instance["instances"]
+          dynamic "cloud_sql_instance" {
+            for_each = volumes.value.cloud_sql_instance == null ? [] : [volumes.value.cloud_sql_instance]
+            content {
+              # instances = lookup(volumes.value.cloud_sql_instance, "instances", [])
+              instances = volumes.value.cloud_sql_instance["instances"]
+            }
           }
+          dynamic "secret" {
+            for_each = volumes.value.secret == null ? [] : [volumes.value.secret]
+            content {
+              secret = secret.value["secret"]
+              dynamic "items" {
+                for_each = secret.value.items == null ? [] : secret.value.items
+                content {
+                   path = items.value["path"]
+                  version  = items.value["version"]
+                  mode = items.value["mode"]
+                }
+              }
+            }
+          }
+          # secret {
+          #   secret = volumes.value.secret["secret"]
+          #   dynamic "items" {
+          #     for_each = volumes.value.secret["items"]
+          #     content {
+          #       path = items.value["path"]
+          #       version  = items.value["version"]
+          #       mode = items.value["mode"]
+          #     }
+          #   }
+          # }
         }
       }
 
